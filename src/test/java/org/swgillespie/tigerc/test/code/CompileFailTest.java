@@ -207,5 +207,13 @@ public class CompileFailTest {
         compileFail("field_access_not_record");
     }
 
+    @Test
+    public void testUseOfNilNoType() {
+        compileFail("use_of_nil_no_type");
+    }
 
+    @Test
+    public void testUseOfNilNotRecord() {
+        compileFail("use_of_nil_not_record");
+    }
 }

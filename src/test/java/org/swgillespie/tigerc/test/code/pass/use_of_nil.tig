@@ -1,0 +1,5 @@
+let type point = {x: int, y: int}
+    var t : point := nil
+in
+    t
+end

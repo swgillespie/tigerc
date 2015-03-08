@@ -7,7 +7,17 @@ public final class NilType extends Type {
     public static final NilType Instance = new NilType();
 
     @Override
+    public boolean isRecord() {
+        return true;
+    }
+
+    @Override
     public boolean isEquivalent(Type other) {
         return other.isError() || (other instanceof NilType);
+    }
+
+    @Override
+    public String toString() {
+        return "NilType";
     }
 }

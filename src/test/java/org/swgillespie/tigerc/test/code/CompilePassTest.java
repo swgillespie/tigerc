@@ -116,5 +116,14 @@ public class CompilePassTest {
         compilePass("array_access");
     }
 
+    @Test
+    public void testUseOfNil() {
+        compilePass("use_of_nil");
+    }
+
+    @Test
+    public void testUseOfNilParameter() {
+        compilePass("use_of_nil_parameter");
+    }
 
 }

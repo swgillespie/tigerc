@@ -1,0 +1,5 @@
+let type point = {x: int, y: int}
+    var unknown := nil /* error: use of nil requires a type annotation*/
+in
+    unknown
+end

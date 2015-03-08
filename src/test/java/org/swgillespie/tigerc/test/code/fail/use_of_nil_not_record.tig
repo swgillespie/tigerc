@@ -1,0 +1,3 @@
+let var x : int := nil in /* error: mismatched types*/
+    x
+end

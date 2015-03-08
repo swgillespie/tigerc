@@ -128,6 +128,10 @@ final class TypecheckVisitor extends BaseAstVisitor {
             this.checkTypes(varType, node.getInitializer());
         } else {
             varType = session.getTypeCache().get(node.getInitializer());
+            if (varType instanceof NilType) {
+                this.error(node, "use of nil requires a type annotation");
+                varType = ErrorType.Instance;
+            }
         }
 
         Entry var = new VariableEntry(varType);
@@ -421,6 +425,11 @@ final class TypecheckVisitor extends BaseAstVisitor {
     public void enter(TypeDeclarationNode node) {
         Type newType = this.typeNodeToType(node.getType());
         table.insertType(session.intern(node.getName()), newType);
+    }
+
+    @Override
+    public void exit(NilNode node) {
+        session.getTypeCache().put(node, NilType.Instance);
     }
 
     private Type typeNodeToType(TypeNode node) {

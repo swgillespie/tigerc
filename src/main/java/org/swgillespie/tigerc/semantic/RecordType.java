@@ -18,7 +18,9 @@ public final class RecordType extends Type {
 
     @Override
     public boolean isEquivalent(Type other) {
-        return other.isError() || this.equals(other);
+        return other.isError()
+                || (other instanceof NilType)
+                || this.equals(other);
     }
 
     @Override
@@ -46,5 +48,12 @@ public final class RecordType extends Type {
                 .map(i -> i.type);
         CompilerAssert.check(first.isPresent(), "attempted to get type of nonexistent field");
         return first.get();
+    }
+
+    @Override
+    public String toString() {
+        return "RecordType{" +
+                "fields=" + fields +
+                '}';
     }
 }

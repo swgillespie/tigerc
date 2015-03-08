@@ -1,0 +1,5 @@
+let type point = {x: int, y: int}
+    function first(p: point): int = p.x
+in
+    first(nil)
+end
