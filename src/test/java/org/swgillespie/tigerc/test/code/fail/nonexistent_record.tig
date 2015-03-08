@@ -1,0 +1,5 @@
+let type point = {x: int, y: int}
+    function first(thing: point) = thing.z /* error: record has no field of name 'z'*/
+in
+    first(point {x = 6, y = 5})
+end

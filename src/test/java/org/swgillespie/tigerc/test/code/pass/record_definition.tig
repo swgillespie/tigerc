@@ -1,0 +1,3 @@
+let type point = {x: int, y: int} in
+    point { x = 5, y = 6 }
+end

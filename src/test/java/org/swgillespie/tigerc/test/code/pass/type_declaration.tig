@@ -1,0 +1,5 @@
+let type my_integer = int
+    function square_my_int(x: my_integer): my_integer = x * x
+in
+    square_my_int(42)
+end

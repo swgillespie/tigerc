@@ -1,0 +1,5 @@
+let type buffer = array of int
+    function first(x: buffer): int = x[0]
+in
+    first(buffer[5] of "string") /* error: mismatched types*/
+end

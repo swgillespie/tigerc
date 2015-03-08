@@ -1,0 +1,1 @@
+let function id(x: int): int = x in id(42) end

@@ -1,0 +1,3 @@
+let var x := 42 in
+    x(19) /* error: identifier 'x' does not refer to a function*/
+end

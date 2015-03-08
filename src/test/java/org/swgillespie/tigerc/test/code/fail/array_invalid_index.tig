@@ -1,0 +1,3 @@
+let function index(x: int) = x[0] in /* error: array base must have array type*/
+    index(5)
+end

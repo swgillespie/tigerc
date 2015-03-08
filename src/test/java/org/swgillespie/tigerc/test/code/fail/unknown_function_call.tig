@@ -1,0 +1,1 @@
+asdf() /* error: function 'asdf' does not exist in current context*/

@@ -1,0 +1,5 @@
+let type point = {x: int, y: int}
+    var origin := point {x = 0, y = 0}
+in
+    origin.x := "string" /* error: mismatched types*/
+end

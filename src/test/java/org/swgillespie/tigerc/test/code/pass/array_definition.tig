@@ -1,0 +1,3 @@
+let type buffer = array of int in
+    buffer[5] of 5
+end

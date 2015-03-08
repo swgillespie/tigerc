@@ -1,0 +1,3 @@
+let function square(x: int): int = x * x in
+    square("not an integer") /* error: mismatched types*/
+end

@@ -1,0 +1,5 @@
+let type point = { x: int, y: int }
+    function get_x(t: point): int = t.x
+in
+    get_x(point {x = 5, y = 6})
+end

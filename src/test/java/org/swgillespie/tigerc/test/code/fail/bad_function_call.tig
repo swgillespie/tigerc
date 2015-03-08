@@ -1,0 +1,1 @@
+print(42) /* error: mismatched types*/

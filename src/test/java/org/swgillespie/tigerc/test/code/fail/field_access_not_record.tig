@@ -1,0 +1,5 @@
+let type point = int
+    var x : point := 42
+in
+    x.asdf /* error: field access base must be record*/
+end
