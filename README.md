@@ -1,5 +1,7 @@
 # tigerc - An implementation of the Tiger programming language
 
+[![Build Status](https://travis-ci.org/swgillespie/tigerc.svg)](https://travis-ci.org/swgillespie/tigerc)
+
 `tigerc` is my attempt at implementing the "Tiger" pedagogical
 programming language used in Andrew W. Appel's "Modern Compiler
 Implementation in C" textbook. Despite implementing `tigerc` in Java,
