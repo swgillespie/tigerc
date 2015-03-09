@@ -1,5 +1,6 @@
 package org.swgillespie.tigerc.semantic;
 
+import org.swgillespie.tigerc.common.ScopedSymbolTable;
 import org.swgillespie.tigerc.common.Symbol;
 
 /**

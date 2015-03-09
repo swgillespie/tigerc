@@ -1,6 +1,7 @@
 package org.swgillespie.tigerc.common;
 
 import org.swgillespie.tigerc.semantic.TypeCache;
+import org.swgillespie.tigerc.trans.escape.EscapeEntryCache;
 
 /**
  * Created by sean on 3/2/15.
@@ -10,12 +11,14 @@ public class CompilationSession {
     private String currentFile;
     private SymbolPool symbolPool;
     private TypeCache typeCache;
+    private EscapeEntryCache escapeEntryCache;
 
     public CompilationSession() {
         this.diagnostics = null;
         this.currentFile = "<none>";
         this.symbolPool = new SymbolPool();
         this.typeCache = new TypeCache();
+        this.escapeEntryCache = new EscapeEntryCache();
     }
 
     public DiagnosticSink getDiagnosticSink() {
@@ -44,6 +47,10 @@ public class CompilationSession {
 
     public TypeCache getTypeCache() {
         return typeCache;
+    }
+
+    public EscapeEntryCache getEscapeEntryCache() {
+        return escapeEntryCache;
     }
 
     public Symbol intern(String str) {

@@ -4,22 +4,14 @@ import org.swgillespie.tigerc.trans.FrameAccess;
 import org.swgillespie.tigerc.trans.TempRegister;
 
 /**
- * Created by sean on 3/5/15.
+ * Created by sean on 3/8/15.
  */
 public abstract class MipsFrameAccess extends FrameAccess {
-    public final class InRegister extends MipsFrameAccess {
-        private TempRegister register;
-
-        public InRegister(TempRegister register) {
-            this.register = register;
-        }
+    public static MipsFrameAccess inFrame(int offset) {
+        return new InFrame(offset);
     }
 
-    public final class InFrame extends MipsFrameAccess {
-        private int offset;
-
-        public InFrame(int offset) {
-            this.offset = offset;
-        }
+    public static MipsFrameAccess inRegister(TempRegister register) {
+        return new InRegister(register);
     }
 }

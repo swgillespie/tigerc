@@ -1,18 +1,16 @@
 package org.swgillespie.tigerc.trans;
 
-import org.swgillespie.tigerc.common.Symbol;
-
 /**
- * Created by sean on 3/5/15.
+ * Created by sean on 3/8/15.
  */
 public abstract class TempLabel {
-    protected Symbol name;
+    protected String name;
 
-    protected TempLabel(Symbol name) {
+    protected TempLabel(String name) {
         this.name = name;
     }
 
-    public Symbol getName() {
-        return this.name;
+    public String getName() {
+        return name;
     }
 }
