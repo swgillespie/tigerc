@@ -1,5 +1,8 @@
 package org.swgillespie.tigerc.trans;
 
+import org.swgillespie.tigerc.trans.ir.IRExpression;
+import org.swgillespie.tigerc.trans.ir.IRStatement;
+
 import java.util.List;
 
 /**
@@ -21,4 +24,10 @@ public abstract class StackFrame {
     public abstract List<? extends FrameAccess> getFormals();
 
     public abstract FrameAccess allocLocal(boolean escape);
+
+    public abstract TempRegister framePointer();
+
+    public abstract TempRegister returnValue();
+
+    public abstract IRStatement procEntryExit(IRStatement statement);
 }

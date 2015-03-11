@@ -10,6 +10,7 @@ import org.swgillespie.tigerc.common.DefaultDiagnosticSink;
 import org.swgillespie.tigerc.common.DiagnosticSink;
 import org.swgillespie.tigerc.parser.ParseCompilationPassFactory;
 import org.swgillespie.tigerc.semantic.SemanticAnalysisPassFactory;
+import org.swgillespie.tigerc.trans.Target;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,7 +25,7 @@ public class CompilePassTest {
     private static final String DIRECTORY = "src/test/java/org/swgillespie/tigerc/test/code/pass";
 
     private void compilePass(String name) {
-        CompilationSession session = new CompilationSession();
+        CompilationSession session = new CompilationSession(Target.MIPS);
         DiagnosticSink diagnosticSink = new DefaultDiagnosticSink();
         session.setDiagnosticSink(diagnosticSink);
         session.setCurrentFile(name + ".tig");

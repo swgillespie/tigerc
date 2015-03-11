@@ -21,9 +21,4 @@ public class MipsStackFrameFactory implements StackFrameFactory {
     public StackFrame newFrame(TempLabel name, List<Boolean> formals) {
         return new MipsStackFrame(name, formals, this.tempFactory);
     }
-
-    @Override
-    public int getWordSize() {
-        return 4;
-    }
 }

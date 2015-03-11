@@ -1,13 +1,14 @@
 package org.swgillespie.tigerc;
 
-import org.swgillespie.tigerc.ast.AstNode;
-import org.swgillespie.tigerc.ast.ExpressionNode;
+import org.swgillespie.tigerc.ast.*;
 import org.swgillespie.tigerc.common.CompilationPass;
 import org.swgillespie.tigerc.common.CompilationSession;
 import org.swgillespie.tigerc.common.DefaultDiagnosticSink;
 import org.swgillespie.tigerc.common.Diagnostic;
+import org.swgillespie.tigerc.driver.CompilationDriver;
 import org.swgillespie.tigerc.parser.ParseCompilationPassFactory;
 import org.swgillespie.tigerc.semantic.SemanticAnalysisPassFactory;
+import org.swgillespie.tigerc.trans.Target;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -20,7 +21,7 @@ public class EntryPoint {
 
     public static void main(String[] args) {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
-        CompilationSession session = new CompilationSession();
+        CompilationSession session = new CompilationSession(Target.MIPS);
         DefaultDiagnosticSink sink = new DefaultDiagnosticSink();
         session.setDiagnosticSink(sink);
         session.setCurrentFile("<stdin>");
@@ -28,13 +29,7 @@ public class EntryPoint {
             while (true) {
                 System.out.print(PROMPT);
                 String input = stdin.readLine();
-                CompilationPass<String, AstNode> pass = ParseCompilationPassFactory.CreateStringPass();
-                CompilationPass<AstNode, AstNode> pass2 = SemanticAnalysisPassFactory.CreateSemanticAnalysisPass();
-                AstNode root = pass.runPass(session, input);
-                if (root != null) {
-                    root = pass2.runPass(session, root);
-                }
-                System.out.println(root);
+                AstNode root = CompilationDriver.runPipeline(session, input);
                 if (session.hasAnyErrors()) {
                     System.out.println("there were errors: ");
                     for (Diagnostic d : session.getDiagnosticSink().getDiagnostics()) {
@@ -43,6 +38,20 @@ public class EntryPoint {
                 } else {
                     if (root instanceof ExpressionNode) {
                         System.out.println("type: " + session.getTypeCache().get((ExpressionNode)root));
+                        if (root instanceof LetExpressionNode) {
+                            ((LetExpressionNode) root).getDeclarations()
+                                    .stream()
+                                    .filter(dec -> dec instanceof FunctionDeclarationNode)
+                                    .forEach(dec -> {
+                                        System.out.println("function: " + dec.getName());
+                                        System.out.println("ir: " + session.getIrTreeCache().get(dec));
+                                    });
+                            for (ExpressionNode expr : ((LetExpressionNode) root).getBody()) {
+                                System.out.println("body expr: " + session.getIrTreeCache().get(expr));
+                            }
+                        } else {
+                            System.out.println("ir: " + session.getIrTreeCache().get(root));
+                        }
                     }
                 }
                 session.getDiagnosticSink().clear();

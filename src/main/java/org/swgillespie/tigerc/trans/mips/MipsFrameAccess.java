@@ -2,6 +2,7 @@ package org.swgillespie.tigerc.trans.mips;
 
 import org.swgillespie.tigerc.trans.FrameAccess;
 import org.swgillespie.tigerc.trans.TempRegister;
+import org.swgillespie.tigerc.trans.ir.IRExpression;
 
 /**
  * Created by sean on 3/8/15.

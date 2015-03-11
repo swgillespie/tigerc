@@ -19,4 +19,11 @@ public class UpdateableTempLabel extends TempLabel {
     public void setLabel(TempLabel label) {
         this.label = label;
     }
+
+    @Override
+    public String toString() {
+        return "UpdateableTempLabel{" +
+                "label=" + label +
+                '}';
+    }
 }

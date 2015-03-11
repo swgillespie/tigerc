@@ -1,6 +1,8 @@
 package org.swgillespie.tigerc.common;
 
 import org.swgillespie.tigerc.semantic.TypeCache;
+import org.swgillespie.tigerc.trans.Target;
+import org.swgillespie.tigerc.trans.treebuild.IRTreeCache;
 import org.swgillespie.tigerc.trans.escape.EscapeEntryCache;
 
 /**
@@ -12,13 +14,17 @@ public class CompilationSession {
     private SymbolPool symbolPool;
     private TypeCache typeCache;
     private EscapeEntryCache escapeEntryCache;
+    private IRTreeCache irTreeCache;
+    private Target target;
 
-    public CompilationSession() {
+    public CompilationSession(Target target) {
         this.diagnostics = null;
         this.currentFile = "<none>";
         this.symbolPool = new SymbolPool();
         this.typeCache = new TypeCache();
         this.escapeEntryCache = new EscapeEntryCache();
+        this.irTreeCache = new IRTreeCache();
+        this.target = target;
     }
 
     public DiagnosticSink getDiagnosticSink() {
@@ -53,7 +59,15 @@ public class CompilationSession {
         return escapeEntryCache;
     }
 
+    public IRTreeCache getIrTreeCache() {
+        return irTreeCache;
+    }
+
     public Symbol intern(String str) {
         return this.symbolPool.getSymbol(str);
+    }
+
+    public Target getTarget() {
+        return target;
     }
 }

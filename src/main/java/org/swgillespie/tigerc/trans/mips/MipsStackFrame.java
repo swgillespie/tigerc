@@ -1,9 +1,8 @@
 package org.swgillespie.tigerc.trans.mips;
 
-import org.swgillespie.tigerc.trans.FrameAccess;
-import org.swgillespie.tigerc.trans.StackFrame;
-import org.swgillespie.tigerc.trans.TempFactory;
-import org.swgillespie.tigerc.trans.TempLabel;
+import org.swgillespie.tigerc.trans.*;
+import org.swgillespie.tigerc.trans.ir.IRExpression;
+import org.swgillespie.tigerc.trans.ir.IRStatement;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,5 +38,22 @@ public final class MipsStackFrame extends StackFrame {
             return access;
         }
         return MipsFrameAccess.inRegister(tempFactory.newTemp());
+    }
+
+    @Override
+    public TempRegister framePointer() {
+        // for Mips, the frame pointer always lives in the $fp register.
+        return ((MipsTempFactory)tempFactory).FP;
+    }
+
+    @Override
+    public TempRegister returnValue() {
+        // for Mips, the return value always lives in the $ra register.
+        return ((MipsTempFactory)tempFactory).RA;
+    }
+
+    @Override
+    public IRStatement procEntryExit(IRStatement statement) {
+        return statement;
     }
 }

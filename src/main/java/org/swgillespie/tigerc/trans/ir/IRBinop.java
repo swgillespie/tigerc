@@ -5,7 +5,7 @@ import org.swgillespie.tigerc.ast.InfixOperator;
 /**
  * Created by sean on 3/8/15.
  */
-public final class IRBinop {
+public final class IRBinop extends IRExpression {
     private InfixOperator op;
     private IRExpression left;
     private IRExpression right;

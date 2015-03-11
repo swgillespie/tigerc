@@ -13,8 +13,8 @@ public final class Level {
     private StackFrame frame;
     private Level parent;
 
-    public static Level outermost(TempFactory factory) {
-        return new Level(null, factory.newNamedLabel("outermost"), new ArrayList<>(), null);
+    public static Level outermost(TempFactory factory, StackFrameFactory stackFactory) {
+        return new Level(null, factory.newNamedLabel("outermost"), new ArrayList<>(), stackFactory);
     }
 
     public Level(Level parent, TempLabel name, List<Boolean> formals, StackFrameFactory factory) {

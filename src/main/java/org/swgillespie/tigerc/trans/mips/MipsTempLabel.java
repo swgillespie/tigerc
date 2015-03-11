@@ -9,4 +9,9 @@ public class MipsTempLabel extends TempLabel {
     public MipsTempLabel(String name) {
         super(name);
     }
+
+    @Override
+    public String toString() {
+        return "MipsTempLabel{name=" + name + "}";
+    }
 }

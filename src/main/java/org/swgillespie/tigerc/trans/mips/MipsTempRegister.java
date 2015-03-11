@@ -15,4 +15,11 @@ public class MipsTempRegister extends TempRegister {
     public int getNumber() {
         return number;
     }
+
+    @Override
+    public String toString() {
+        return "MipsTempRegister{" +
+                "number=" + number +
+                '}';
+    }
 }

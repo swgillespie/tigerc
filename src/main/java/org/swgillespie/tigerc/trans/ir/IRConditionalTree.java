@@ -8,7 +8,7 @@ import org.swgillespie.tigerc.trans.TempRegister;
 /**
  * Created by sean on 3/8/15.
  */
-public class IRConditionalTree extends IRTree {
+public final class IRConditionalTree extends IRTree {
     private UpdateableTempLabel trueTarget;
     private UpdateableTempLabel falseTarget;
     private IRStatement statement;

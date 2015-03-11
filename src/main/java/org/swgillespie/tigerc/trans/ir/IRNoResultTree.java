@@ -5,7 +5,7 @@ import org.swgillespie.tigerc.trans.TempFactory;
 /**
  * Created by sean on 3/8/15.
  */
-public class IRNoResultTree extends IRTree {
+public final class IRNoResultTree extends IRTree {
     private IRStatement stmt;
 
     public IRNoResultTree(IRStatement stmt) {
@@ -29,5 +29,12 @@ public class IRNoResultTree extends IRTree {
 
     public IRStatement getStmt() {
         return stmt;
+    }
+
+    @Override
+    public String toString() {
+        return "IRNoResultTree{" +
+                "stmt=" + stmt +
+                '}';
     }
 }

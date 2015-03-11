@@ -2,6 +2,7 @@ package org.swgillespie.tigerc.trans.ir;
 
 import org.swgillespie.tigerc.trans.TempLabel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,18 +10,24 @@ import java.util.List;
  */
 public final class IRJump extends IRStatement {
     private IRExpression target;
-    private List<? extends TempLabel> possibleTargetLabels;
+    private List<TempLabel> possibleTargetLabels;
 
-    public IRJump(IRExpression target, List<? extends TempLabel> possibleTargetLabels) {
+    public IRJump(IRExpression target, List<TempLabel> possibleTargetLabels) {
         this.target = target;
         this.possibleTargetLabels = possibleTargetLabels;
+    }
+
+    public IRJump(TempLabel label) {
+        this.target = new IRName(label);
+        this.possibleTargetLabels = new ArrayList<>();
+        this.possibleTargetLabels.add(label);
     }
 
     public IRExpression getTarget() {
         return target;
     }
 
-    public List<? extends TempLabel> getPossibleTargetLabels() {
+    public List<TempLabel> getPossibleTargetLabels() {
         return possibleTargetLabels;
     }
 

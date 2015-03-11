@@ -8,6 +8,7 @@ import org.swgillespie.tigerc.ast.AstNode;
 import org.swgillespie.tigerc.common.*;
 import org.swgillespie.tigerc.parser.ParseCompilationPassFactory;
 import org.swgillespie.tigerc.semantic.SemanticAnalysisPassFactory;
+import org.swgillespie.tigerc.trans.Target;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -24,7 +25,7 @@ public class CompileFailTest {
     private static final String DIRECTORY = "src/test/java/org/swgillespie/tigerc/test/code/fail";
 
     private void compileFail(String name) {
-        CompilationSession session = new CompilationSession();
+        CompilationSession session = new CompilationSession(Target.MIPS);
         DiagnosticSink diagnosticSink = new DefaultDiagnosticSink();
         session.setDiagnosticSink(diagnosticSink);
         session.setCurrentFile(name + ".tig");
