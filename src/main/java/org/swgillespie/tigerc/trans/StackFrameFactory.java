@@ -7,4 +7,5 @@ import java.util.List;
  */
 public interface StackFrameFactory {
     StackFrame newFrame(TempLabel name, List<Boolean> formals);
+    int wordSize();
 }

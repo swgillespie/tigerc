@@ -9,6 +9,8 @@ import org.swgillespie.tigerc.driver.CompilationDriver;
 import org.swgillespie.tigerc.parser.ParseCompilationPassFactory;
 import org.swgillespie.tigerc.semantic.SemanticAnalysisPassFactory;
 import org.swgillespie.tigerc.trans.Target;
+import org.swgillespie.tigerc.trans.treebuild.Fragment;
+import org.swgillespie.tigerc.trans.treebuild.TransFragments;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -29,29 +31,15 @@ public class EntryPoint {
             while (true) {
                 System.out.print(PROMPT);
                 String input = stdin.readLine();
-                AstNode root = CompilationDriver.runPipeline(session, input);
+                TransFragments frags = CompilationDriver.runPipeline(session, input);
                 if (session.hasAnyErrors()) {
                     System.out.println("there were errors: ");
                     for (Diagnostic d : session.getDiagnosticSink().getDiagnostics()) {
                         System.out.println(d);
                     }
                 } else {
-                    if (root instanceof ExpressionNode) {
-                        System.out.println("type: " + session.getTypeCache().get((ExpressionNode)root));
-                        if (root instanceof LetExpressionNode) {
-                            ((LetExpressionNode) root).getDeclarations()
-                                    .stream()
-                                    .filter(dec -> dec instanceof FunctionDeclarationNode)
-                                    .forEach(dec -> {
-                                        System.out.println("function: " + dec.getName());
-                                        System.out.println("ir: " + session.getIrTreeCache().get(dec));
-                                    });
-                            for (ExpressionNode expr : ((LetExpressionNode) root).getBody()) {
-                                System.out.println("body expr: " + session.getIrTreeCache().get(expr));
-                            }
-                        } else {
-                            System.out.println("ir: " + session.getIrTreeCache().get(root));
-                        }
+                    for (Fragment f : frags.getFragments()) {
+                        System.out.println("fragment: " + f);
                     }
                 }
                 session.getDiagnosticSink().clear();

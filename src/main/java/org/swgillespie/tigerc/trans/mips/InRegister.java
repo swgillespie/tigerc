@@ -27,6 +27,13 @@ final class InRegister extends MipsFrameAccess {
         is as simple as accessing the register in which this value lives. Since we aren't
         accessing this value from the stack, we can ignore the framePointer parameter.
          */
-        return new IRMem(new IRTemp(register), MipsConstants.wordSize);
+        return new IRTemp(register);
+    }
+
+    @Override
+    public String toString() {
+        return "InRegister{" +
+                "register=" + register +
+                '}';
     }
 }

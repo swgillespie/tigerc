@@ -51,7 +51,12 @@ public final class Access {
             cursor = cursor.getParent();
         }
         // the result is an expression that will traverse the static links until it reaches the correct level
-        // where the variable is defined.
-        return new IRExpressionTree(staticLinkExpression);
+        // where the variable is defined. From there, we can use the frame access to determine how to access
+        // the var based on its stack frame. The static link expression may or may not be ignored depending
+        // on where the target's FrameAccess class chooses to allocate the var.
+        // In Mips, for example, staticLinkExpression will be ignored completely if the variable
+        // doesn't escape (i.e. it's stored in a register)
+        IRExpression accessExpr = access.toExpression(staticLinkExpression, factory);
+        return new IRExpressionTree(accessExpr);
     }
 }

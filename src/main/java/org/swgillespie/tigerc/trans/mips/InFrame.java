@@ -29,4 +29,11 @@ final class InFrame extends MipsFrameAccess {
                 framePointer,
                 new IRConst(offset)), MipsConstants.wordSize);
     }
+
+    @Override
+    public String toString() {
+        return "InFrame{" +
+                "offset=" + offset +
+                '}';
+    }
 }

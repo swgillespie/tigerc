@@ -5,8 +5,7 @@ import org.swgillespie.tigerc.common.BaseAstVisitor;
 import org.swgillespie.tigerc.common.CompilationSession;
 import org.swgillespie.tigerc.common.CompilerAssert;
 import org.swgillespie.tigerc.common.Symbol;
-import org.swgillespie.tigerc.semantic.RecordField;
-import org.swgillespie.tigerc.semantic.RecordType;
+import org.swgillespie.tigerc.semantic.*;
 import org.swgillespie.tigerc.trans.*;
 import org.swgillespie.tigerc.trans.escape.FunctionEscapeEntry;
 import org.swgillespie.tigerc.trans.escape.VariableEscapeEntry;
@@ -15,6 +14,7 @@ import org.swgillespie.tigerc.trans.mips.MipsConstants;
 import org.swgillespie.tigerc.trans.mips.MipsStackFrameFactory;
 import org.swgillespie.tigerc.trans.mips.MipsTempFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -29,6 +29,7 @@ public class TransVisitor extends BaseAstVisitor {
     private TransTable table;
     private Stack<Level> levels;
     private Stack<TempLabel> breakLabels;
+    private TransFragments fragments;
 
     public TransVisitor(CompilationSession session) {
         this.session = session;
@@ -44,6 +45,36 @@ public class TransVisitor extends BaseAstVisitor {
         levels.push(Level.outermost(tempFactory, stackFrameFactory));
         table = new TransTable();
         breakLabels = new Stack<>();
+        fragments = new TransFragments();
+        this.initializeTable();
+    }
+
+    private void initializeTable() {
+        this.table.insert(session.intern("print"),
+                new FunctionTransEntry(levels.peek(), tempFactory.print()));
+        this.table.insert(session.intern("flush"),
+                new FunctionTransEntry(levels.peek(), tempFactory.flush()));
+        this.table.insert(session.intern("getchar"),
+                new FunctionTransEntry(levels.peek(), tempFactory.getchar()));
+        this.table.insert(session.intern("ord"),
+                new FunctionTransEntry(levels.peek(), tempFactory.ord()));
+        this.table.insert(session.intern("chr"),
+                new FunctionTransEntry(levels.peek(), tempFactory.chr()));
+        this.table.insert(session.intern("size"),
+                new FunctionTransEntry(levels.peek(), tempFactory.size()));
+        this.table.insert(session.intern("substring"),
+                new FunctionTransEntry(levels.peek(), tempFactory.substring()));
+        this.table.insert(session.intern("concat"),
+                new FunctionTransEntry(levels.peek(), tempFactory.concat()));
+        this.table.insert(session.intern("not"),
+                new FunctionTransEntry(levels.peek(), tempFactory.not()));
+        this.table.insert(session.intern("exit"),
+                new FunctionTransEntry(levels.peek(), tempFactory.exit()));
+
+    }
+
+    public TransFragments getFragments() {
+        return fragments;
     }
 
     public void enter(FunctionDeclarationNode node) {
@@ -69,9 +100,14 @@ public class TransVisitor extends BaseAstVisitor {
     public void exit(FunctionDeclarationNode node) {
         IRExpression functionBody = session.getIrTreeCache().get(node.getBody()).unwrapExpression(tempFactory);
         Level functionLevel = levels.pop();
-        // finish the function by moving the expression result into the register designated for the return value
-        IRStatement actualBody = new IRMoveTemp(new IRTemp(functionLevel.getFrame().returnValue()), functionBody);
-        session.getIrTreeCache().put(node, new IRNoResultTree(actualBody));
+        // moving the expression result into the register designated for the return value
+        IRStatement bodyWithRet = new IRMoveTemp(new IRTemp(functionLevel.getFrame().returnValue()), functionBody);
+        // decorate the function with its pre/postlude that does the view shift and saves/loads callee-saved
+        // registers
+        IRStatement actualBody = /*functionLevel.getFrame().procEntryExit(bodyWithRet)*/bodyWithRet;
+        Fragment procFragment = Fragment.procFragment(actualBody, functionLevel.getFrame());
+        fragments.add(procFragment);
+        session.getIrTreeCache().put(node, new IRExpressionTree(new IRConst(0)));
         table.exitScope();
     }
 
@@ -80,6 +116,34 @@ public class TransVisitor extends BaseAstVisitor {
         Access access = levels.peek().allocLocal(entry.hasEscaped());
         VariableTransEntry transEntry = new VariableTransEntry(access);
         table.insert(session.intern(node.getName()), transEntry);
+        session.getIrTreeCache().put(node, session.getIrTreeCache().get(node.getInitializer()));
+    }
+
+    public void exit(TypeDeclarationNode node) {
+        session.getIrTreeCache().put(node, new IRExpressionTree(new IRConst(0)));
+    }
+
+    public void exit(LetExpressionNode node) {
+        // first - the final element in the list of expressions is the resulting value.
+        List<ExpressionNode> body = node.getBody();
+        ExpressionNode last = body.get(body.size() - 1);
+        IRExpression finalExp = session.getIrTreeCache().get(last).unwrapExpression(tempFactory);
+        IRExpression compositeExp = finalExp;
+        for (int i = body.size() - 2; i >= 0; i--) {
+            IRStatement expr = session.getIrTreeCache().get(body.get(i)).unwrapStatement(tempFactory);
+            compositeExp = new IRExpressionSequence(expr, compositeExp);
+        }
+
+        for (DeclarationNode dec : node.getDeclarations()) {
+            if (dec instanceof VariableDeclarationNode) {
+                IRExpression initializer = session.getIrTreeCache().get(dec).unwrapExpression(tempFactory);
+                VariableTransEntry entry = (VariableTransEntry)table.query(session.intern(dec.getName()));
+                IRExpression entryLocation = entry.getAccess().simpleVar(levels.peek(), tempFactory).unwrapExpression(tempFactory);
+                IRStatement creation = new IRMoveMem(entryLocation, stackFrameFactory.wordSize(), initializer);
+                compositeExp = new IRExpressionSequence(creation, compositeExp);
+            }
+        }
+        session.getIrTreeCache().put(node, new IRExpressionTree(compositeExp));
     }
 
     public void exit(IdentifierNode node) {
@@ -93,13 +157,55 @@ public class TransVisitor extends BaseAstVisitor {
     }
 
     public void exit(InfixExpressionNode node) {
-        IRTree left = session.getIrTreeCache().get(node.getLeft());
-        IRTree right = session.getIrTreeCache().get(node.getRight());
-        session.getIrTreeCache().put(node,
-                new IRExpressionTree(
-                        new IRBinop(node.getOperator(),
-                                left.unwrapExpression(tempFactory),
-                                right.unwrapExpression(tempFactory))));
+        IRExpression lhs = session.getIrTreeCache().get(node.getLeft()).unwrapExpression(tempFactory);
+        IRExpression rhs = session.getIrTreeCache().get(node.getRight()).unwrapExpression(tempFactory);
+        IRExpression result = null;
+        switch (node.getOperator()) {
+            case Plus:
+            case Minus:
+            case Mul:
+            case Div:
+            case And:
+            case Or:
+                // semant has guaranteed that the lhs and rhs are integers
+                result = new IRBinop(node.getOperator(), lhs, rhs);
+                break;
+            case Eq:
+            case Neq:
+                // these could be anything, but semant guarantees that
+                // lhs and rhs have the same type.
+                // in reality, strings are the only case we care about.
+                // records and arrays are just pointers and pointer comparison
+                // is the same as int comparison.
+                Type lhsType = session.getTypeCache().get(node.getLeft());
+                if (lhsType instanceof StringType) {
+                    // they are both strings. we need to emit a call to the runtime
+                    // string comparison function.
+                    IRExpression compResult = new IRCall(new IRName(tempFactory.strcmp()), Arrays.asList(lhs, rhs));
+                    result = new IRBinop(node.getOperator(), compResult, new IRConst(0));
+                } else {
+                    // they are integers, records, or arrays. no matter what, we need
+                    // to do an integer comparison.
+                    result = new IRBinop(node.getOperator(), lhs, rhs);
+                }
+                break;
+            case LessThan:
+            case Leq:
+            case GreaterThan:
+            case Geq:
+                // these could be either ints or strings.
+                // if they are ints, it's a normal comparison. if they
+                // are strings, it's a lexicographic comparison.
+                Type left = session.getTypeCache().get(node.getLeft());
+                if (left instanceof IntegerType) {
+                    result = new IRBinop(node.getOperator(), lhs, rhs);
+                } else {
+                    IRExpression compResult = new IRCall(new IRName(tempFactory.strcmp()), Arrays.asList(lhs, rhs));
+                    result = new IRBinop(node.getOperator(), compResult, new IRConst(0));
+                }
+                break;
+        }
+        session.getIrTreeCache().put(node, new IRExpressionTree(result));
     }
 
     public void exit(ConditionalExpressionNode node) {
@@ -226,11 +332,11 @@ public class TransVisitor extends BaseAstVisitor {
             if (field.name == thisField) {
                 break;
             }
-            offset += MipsConstants.wordSize;
+            offset += stackFrameFactory.wordSize();
         }
         // expr = mem [record + offset]
         IRExpression basePlusOffset = new IRMem(new IRBinop(InfixOperator.Plus, base,
-                new IRConst(offset)), MipsConstants.wordSize);
+                new IRConst(offset)), stackFrameFactory.wordSize());
         session.getIrTreeCache().put(node, new IRExpressionTree(basePlusOffset));
     }
 
@@ -241,7 +347,7 @@ public class TransVisitor extends BaseAstVisitor {
         // expr = mem [base + (index * wordSize)]
         IRExpression offset = new IRMem(new IRBinop(InfixOperator.Plus, base,
                         new IRBinop(InfixOperator.Mul, index,
-                                new IRConst(MipsConstants.wordSize))), MipsConstants.wordSize);
+                                new IRConst(stackFrameFactory.wordSize()))), stackFrameFactory.wordSize());
         session.getIrTreeCache().put(node, new IRExpressionTree(offset));
     }
 
@@ -260,11 +366,65 @@ public class TransVisitor extends BaseAstVisitor {
     }
 
     public void exit(ArrayCreationExpressionNode node) {
-        // TODO
+        IRExpression initializer = session.getIrTreeCache().get(node.getInitializer()).unwrapExpression(tempFactory);
+        IRExpression length = session.getIrTreeCache().get(node.getLengthExpression()).unwrapExpression(tempFactory);
+        TempRegister reg = tempFactory.newTemp();
+        TempRegister init = tempFactory.newTemp();
+        TempRegister lenReg = tempFactory.newTemp();
+        // lenReg <- length
+        IRStatement lengthInitializer = new IRMoveTemp(new IRTemp(lenReg), length);
+        // reg <- malloc(lenReg * wordSize)
+        IRStatement malloc = new IRMoveTemp(
+                new IRTemp(reg),
+                new IRCall(new IRName(tempFactory.malloc()),
+                        Arrays.asList(new IRBinop(InfixOperator.Mul, new IRTemp(lenReg),
+                                new IRConst(stackFrameFactory.wordSize())))));
+        // init <- initializer
+        IRStatement evalInitializer = new IRMoveTemp(new IRTemp(init), initializer);
+        // memset(reg, init) - reg is a pointer to a newly allocated array, init is a value
+        // that will be used to populate the array
+        IRStatement memset = new IREvalAndDiscard(new IRCall(new IRName(tempFactory.memset()),
+                Arrays.asList(new IRTemp(reg), new IRTemp(init), new IRTemp(lenReg))));
+        // putting it all together and yielding reg at the end
+        // TODO the initializer is evaluated before the length of the array. is that correct?
+        IRExpression wholeThing = new IRExpressionSequence(evalInitializer,
+                new IRExpressionSequence(malloc,
+                        new IRExpressionSequence(memset, new IRTemp(reg))));
+        session.getIrTreeCache().put(node, new IRExpressionTree(wholeThing));
     }
 
     public void exit(RecordCreationExpressionNode node) {
-        // TODO
+        RecordType ty = (RecordType)session.getTypeCache().get(node);
+        TempRegister reg = tempFactory.newTemp();
+        IRStatement init = null;
+        // building backwards!
+        List<RecordField> fields = ty.getFields();
+        List<FieldCreationNode> creationNode = node.getFields();
+        for (int i = fields.size() - 1; i >= 0; i--) {
+            IRExpression initExpr = session.getIrTreeCache().get(creationNode.get(i)).unwrapExpression(tempFactory);
+            IRStatement fieldCreationStatement = new IRMoveMem(
+                    new IRMem(
+                            new IRBinop(InfixOperator.Plus, new IRTemp(reg),
+                                    new IRConst(i * stackFrameFactory.wordSize())),
+                            stackFrameFactory.wordSize()),
+                        stackFrameFactory.wordSize(),
+                    initExpr);
+            if (init == null) {
+                init = fieldCreationStatement;
+            } else {
+                init = new IRSeq(fieldCreationStatement, init);
+            }
+        }
+        IRStatement malloc = new IRSeq(
+                new IRMoveTemp(
+                        new IRTemp(reg),
+                        new IRCall(new IRName(tempFactory.malloc()), Arrays.asList(
+                                new IRConst(fields.size() * stackFrameFactory.wordSize())))), init);
+        session.getIrTreeCache().put(node, new IRExpressionTree(new IRExpressionSequence(malloc, new IRTemp(reg))));
+    }
+
+    public void exit(FieldCreationNode node) {
+        session.getIrTreeCache().put(node, session.getIrTreeCache().get(node.getFieldValue()));
     }
 
     public void exit(ForExpressionNode node) {
@@ -294,4 +454,12 @@ public class TransVisitor extends BaseAstVisitor {
         IRExpression callExpr = new IRCall(new IRName(func.getLabel()), parameters);
         session.getIrTreeCache().put(node, new IRExpressionTree(callExpr));
     }
+
+    public void exit(StringLiteralNode node) {
+        TempLabel label = tempFactory.newLabel();
+        Fragment strFragment = Fragment.stringFragment(label, node.getValue());
+        fragments.add(strFragment);
+        session.getIrTreeCache().put(node, new IRExpressionTree(new IRName(label)));
+    }
+
 }

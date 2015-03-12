@@ -4,6 +4,9 @@ import org.swgillespie.tigerc.trans.TempFactory;
 import org.swgillespie.tigerc.trans.TempLabel;
 import org.swgillespie.tigerc.trans.TempRegister;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by sean on 3/8/15.
  */
@@ -99,4 +102,77 @@ public class MipsTempFactory implements TempFactory {
      * $ra - return address
      */
     public TempRegister RA = newTemp();
+
+    @Override
+    public TempLabel print() {
+        return newNamedLabel("__mips_print");
+    }
+
+    @Override
+    public TempLabel flush() {
+        return newNamedLabel("__mips_flush");
+    }
+
+    @Override
+    public TempLabel getchar() {
+        return newNamedLabel("__mips_getchar");
+    }
+
+    @Override
+    public TempLabel ord() {
+        return newNamedLabel("__mips_ord");
+    }
+
+    @Override
+    public TempLabel chr() {
+        return newNamedLabel("__mips_chr");
+    }
+
+    @Override
+    public TempLabel size() {
+        return newNamedLabel("__mips_size");
+    }
+
+    @Override
+    public TempLabel substring() {
+        return newNamedLabel("__mips_substring");
+    }
+
+    @Override
+    public TempLabel concat() {
+        return newNamedLabel("__mips_concat");
+    }
+
+    @Override
+    public TempLabel not() {
+        return newNamedLabel("__mips_not");
+    }
+
+    @Override
+    public TempLabel exit() {
+        return newNamedLabel("__mips_exit");
+    }
+
+    @Override
+    public TempLabel strcmp() {
+        return newNamedLabel("__mips_strcmp");
+    }
+
+    @Override
+    public TempLabel malloc() {
+        return newNamedLabel("__mips_malloc");
+    }
+
+    @Override
+    public TempLabel memset() {
+        return newNamedLabel("__mips_memset");
+    }
+
+    public List<TempRegister> argumentRegisters() {
+        return Arrays.asList(A0, A1, A2, A3);
+    }
+
+    public List<TempRegister> calleeSaveRegisters() {
+        return Arrays.asList(S0, S1, S2, S3, S4, S5, S6, S7);
+    }
 }
