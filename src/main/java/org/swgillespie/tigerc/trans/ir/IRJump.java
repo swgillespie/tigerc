@@ -31,11 +31,12 @@ public final class IRJump extends IRStatement {
         return possibleTargetLabels;
     }
 
+    public void setTarget(IRExpression target) {
+        this.target = target;
+    }
+
     @Override
     public String toString() {
-        return "IRJump{" +
-                "target=" + target +
-                ", possibleTargetLabels=" + possibleTargetLabels +
-                '}';
+        return "jump " + target;
     }
 }

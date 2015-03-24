@@ -18,8 +18,6 @@ public final class IRName extends IRExpression {
 
     @Override
     public String toString() {
-        return "IRName{" +
-                "name=" + name +
-                '}';
+        return name.getName();
     }
 }

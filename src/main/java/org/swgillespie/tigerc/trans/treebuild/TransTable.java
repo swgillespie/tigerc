@@ -1,5 +1,6 @@
 package org.swgillespie.tigerc.trans.treebuild;
 
+import org.swgillespie.tigerc.common.CompilerAssert;
 import org.swgillespie.tigerc.common.ScopedSymbolTable;
 import org.swgillespie.tigerc.common.Symbol;
 
@@ -22,7 +23,9 @@ public class TransTable {
     }
 
     public TransEntry query(Symbol sym) {
-        return this.entries.query(sym);
+        TransEntry entry = this.entries.query(sym);
+        CompilerAssert.check(entry != null, "entry for symbol " + sym + " was null!");
+        return entry;
     }
 
     public void insert(Symbol sym, TransEntry entry) {

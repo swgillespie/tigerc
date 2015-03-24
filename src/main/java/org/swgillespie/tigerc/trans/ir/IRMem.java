@@ -20,11 +20,12 @@ public final class IRMem extends IRExpression {
         return wordSize;
     }
 
+    public void setAddress(IRExpression address) {
+        this.address = address;
+    }
+
     @Override
     public String toString() {
-        return "IRMem{" +
-                "address=" + address +
-                ", wordSize=" + wordSize +
-                '}';
+        return "mem[" + address + "]";
     }
 }

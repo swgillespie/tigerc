@@ -18,8 +18,29 @@ public class MipsTempRegister extends TempRegister {
 
     @Override
     public String toString() {
-        return "MipsTempRegister{" +
-                "number=" + number +
-                '}';
+        // for debugging purposes only!
+        MipsTempFactory temp = new MipsTempFactory();
+        String canonicalName = temp.getCanonicalRegisterName(this);
+        if (canonicalName == null) {
+            return "%" + number;
+        }
+        return canonicalName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MipsTempRegister that = (MipsTempRegister) o;
+
+        if (number != that.number) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return number;
     }
 }

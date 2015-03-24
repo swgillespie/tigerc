@@ -41,4 +41,9 @@ public final class Level {
     public Level getParent() {
         return parent;
     }
+
+    @Override
+    public String toString() {
+        return "level: " + frame.getName().getName();
+    }
 }

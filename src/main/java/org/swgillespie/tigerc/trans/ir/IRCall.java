@@ -1,5 +1,6 @@
 package org.swgillespie.tigerc.trans.ir;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,11 +23,16 @@ public final class IRCall extends IRExpression {
         return arguments;
     }
 
+    public void setFunction(IRExpression function) {
+        this.function = function;
+    }
+
+    public void setArguments(List<IRExpression> arguments) {
+        this.arguments = arguments;
+    }
+
     @Override
     public String toString() {
-        return "IRCall{" +
-                "function=" + function +
-                ", arguments=" + arguments +
-                '}';
+        return function + "(" + arguments + ")";
     }
 }

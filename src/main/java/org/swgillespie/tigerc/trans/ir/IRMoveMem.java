@@ -26,12 +26,16 @@ public final class IRMoveMem extends IRStatement {
         return value;
     }
 
+    public void setAddressExpression(IRExpression addressExpression) {
+        this.addressExpression = addressExpression;
+    }
+
+    public void setValue(IRExpression value) {
+        this.value = value;
+    }
+
     @Override
     public String toString() {
-        return "IRMoveMem{" +
-                "addressExpression=" + addressExpression +
-                ", writeSize=" + writeSize +
-                ", value=" + value +
-                '}';
+        return addressExpression + " <- " + value;
     }
 }

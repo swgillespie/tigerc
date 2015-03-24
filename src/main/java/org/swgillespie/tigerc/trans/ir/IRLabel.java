@@ -18,8 +18,6 @@ public final class IRLabel extends IRStatement {
 
     @Override
     public String toString() {
-        return "IRLabel{" +
-                "label=" + label +
-                '}';
+        return label.getName() + ":";
     }
 }

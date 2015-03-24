@@ -2,6 +2,9 @@ package org.swgillespie.tigerc.trans.ir;
 
 import org.swgillespie.tigerc.ast.InfixOperator;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by sean on 3/8/15.
  */
@@ -28,12 +31,20 @@ public final class IRBinop extends IRExpression {
         return right;
     }
 
+    public void setOp(InfixOperator op) {
+        this.op = op;
+    }
+
+    public void setLeft(IRExpression left) {
+        this.left = left;
+    }
+
+    public void setRight(IRExpression right) {
+        this.right = right;
+    }
+
     @Override
     public String toString() {
-        return "IRBinop{" +
-                "op=" + op +
-                ", left=" + left +
-                ", right=" + right +
-                '}';
+        return op + "("  + left + ", " + right + ")";
     }
 }

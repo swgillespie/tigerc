@@ -16,8 +16,6 @@ public final class IRConst extends IRExpression {
 
     @Override
     public String toString() {
-        return "IRConst{" +
-                "immediateValue=" + immediateValue +
-                '}';
+        return "#" + immediateValue;
     }
 }

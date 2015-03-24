@@ -14,10 +14,12 @@ public final class IREvalAndDiscard extends IRStatement {
         return expr;
     }
 
+    public void setExpr(IRExpression expr) {
+        this.expr = expr;
+    }
+
     @Override
     public String toString() {
-        return "IREvalAndDiscard{" +
-                "expr=" + expr +
-                '}';
+        return "discard " + expr;
     }
 }

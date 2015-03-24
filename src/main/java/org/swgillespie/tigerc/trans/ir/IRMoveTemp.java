@@ -20,11 +20,12 @@ public final class IRMoveTemp extends IRStatement {
         return value;
     }
 
+    public void setValue(IRExpression value) {
+        this.value = value;
+    }
+
     @Override
     public String toString() {
-        return "IRMoveTemp{" +
-                "destination=" + destination +
-                ", value=" + value +
-                '}';
+        return destination + " <- " + value;
     }
 }

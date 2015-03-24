@@ -10,9 +10,6 @@ import org.swgillespie.tigerc.trans.*;
 import org.swgillespie.tigerc.trans.escape.FunctionEscapeEntry;
 import org.swgillespie.tigerc.trans.escape.VariableEscapeEntry;
 import org.swgillespie.tigerc.trans.ir.*;
-import org.swgillespie.tigerc.trans.mips.MipsConstants;
-import org.swgillespie.tigerc.trans.mips.MipsStackFrameFactory;
-import org.swgillespie.tigerc.trans.mips.MipsTempFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,14 +30,8 @@ public class TransVisitor extends BaseAstVisitor {
 
     public TransVisitor(CompilationSession session) {
         this.session = session;
-        switch (session.getTarget()) {
-            case MIPS:
-                tempFactory = new MipsTempFactory();
-                stackFrameFactory = new MipsStackFrameFactory(tempFactory);
-                break;
-            default:
-                CompilerAssert.panic("unsupported target:" + session.getTarget());
-        }
+        tempFactory = session.getTempFactory();
+        stackFrameFactory = session.getStackFrameFactory();
         levels = new Stack<>();
         levels.push(Level.outermost(tempFactory, stackFrameFactory));
         table = new TransTable();
@@ -104,7 +95,7 @@ public class TransVisitor extends BaseAstVisitor {
         IRStatement bodyWithRet = new IRMoveTemp(new IRTemp(functionLevel.getFrame().returnValue()), functionBody);
         // decorate the function with its pre/postlude that does the view shift and saves/loads callee-saved
         // registers
-        IRStatement actualBody = /*functionLevel.getFrame().procEntryExit(bodyWithRet)*/bodyWithRet;
+        IRStatement actualBody = functionLevel.getFrame().procEntryExit(bodyWithRet);
         Fragment procFragment = Fragment.procFragment(actualBody, functionLevel.getFrame());
         fragments.add(procFragment);
         session.getIrTreeCache().put(node, new IRExpressionTree(new IRConst(0)));
@@ -387,9 +378,10 @@ public class TransVisitor extends BaseAstVisitor {
                 Arrays.asList(new IRTemp(reg), new IRTemp(init), new IRTemp(lenReg))));
         // putting it all together and yielding reg at the end
         // TODO the initializer is evaluated before the length of the array. is that correct?
-        IRExpression wholeThing = new IRExpressionSequence(evalInitializer,
-                new IRExpressionSequence(malloc,
-                        new IRExpressionSequence(memset, new IRTemp(reg))));
+        IRExpression wholeThing = new IRExpressionSequence(lengthInitializer,
+                new IRExpressionSequence(evalInitializer,
+                        new IRExpressionSequence(malloc,
+                                new IRExpressionSequence(memset, new IRTemp(reg)))));
         session.getIrTreeCache().put(node, new IRExpressionTree(wholeThing));
     }
 
@@ -428,7 +420,8 @@ public class TransVisitor extends BaseAstVisitor {
     }
 
     public void exit(ForExpressionNode node) {
-        // TODO
+        // TODO - transform the for loop into a while loop and call exit(WhileExpressionNode)
+        CompilerAssert.panic("not implemented yet");
     }
 
     public void exit(SequenceExpressionNode node) {
@@ -437,11 +430,10 @@ public class TransVisitor extends BaseAstVisitor {
                 .map(i -> session.getIrTreeCache().get(i))
                 .collect(Collectors.toList());
         IRExpression last = exprs.get(exprs.size() - 1).unwrapExpression(tempFactory);
-        IRExpression total = last;
         for (int i = exprs.size() - 2; i >= 0; i--) {
-            total = new IRExpressionSequence(exprs.get(i).unwrapStatement(tempFactory), total);
+            last = new IRExpressionSequence(exprs.get(i).unwrapStatement(tempFactory), last);
         }
-        session.getIrTreeCache().put(node, new IRExpressionTree(total));
+        session.getIrTreeCache().put(node, new IRExpressionTree(last));
     }
 
     public void exit(CallExpressionNode node) {
@@ -451,8 +443,23 @@ public class TransVisitor extends BaseAstVisitor {
                 .map(i -> session.getIrTreeCache().get(i))
                 .map(i -> i.unwrapExpression(tempFactory))
                 .collect(Collectors.toList());
-        IRExpression callExpr = new IRCall(new IRName(func.getLabel()), parameters);
-        session.getIrTreeCache().put(node, new IRExpressionTree(callExpr));
+        // the first parameter of the function is always the static link.
+        StackFrame thisFrame = this.levels.peek().getFrame();
+        IRExpression staticLink = this.levels.peek()
+                .getFormals()
+                .get(0)
+                .getAccess()
+                .toExpression(new IRTemp(thisFrame.framePointer()), tempFactory);
+        parameters.add(0, staticLink);
+        Type functionReturnTy = session.getTypeCache().get(node);
+        if (functionReturnTy instanceof VoidType) {
+            // if the function has void return type, we can safely discard the return value.
+            IRStatement call = new IREvalAndDiscard(new IRCall(new IRName(func.getLabel()), parameters));
+            session.getIrTreeCache().put(node, new IRNoResultTree(call));
+        } else {
+            IRExpression callExpr = new IRCall(new IRName(func.getLabel()), parameters);
+            session.getIrTreeCache().put(node, new IRExpressionTree(callExpr));
+        }
     }
 
     public void exit(StringLiteralNode node) {
@@ -460,6 +467,16 @@ public class TransVisitor extends BaseAstVisitor {
         Fragment strFragment = Fragment.stringFragment(label, node.getValue());
         fragments.add(strFragment);
         session.getIrTreeCache().put(node, new IRExpressionTree(new IRName(label)));
+    }
+
+    public ProcFragment transToplevel(AstNode toplevelNode) {
+        CompilerAssert.check(levels.size() == 1, "transToplevel called when not at toplevel?");
+        IRTree tree = session.getIrTreeCache().get(toplevelNode);
+        TempRegister result = tempFactory.newTemp();
+        IRStatement body = new IRSeq(new IRMoveTemp(new IRTemp(result), tree.unwrapExpression(tempFactory)),
+                new IREvalAndDiscard(new IRCall(new IRName(tempFactory.exit()),
+                        Arrays.asList(new IRTemp(result)))));
+        return new ProcFragment(body, levels.pop().getFrame());
     }
 
 }

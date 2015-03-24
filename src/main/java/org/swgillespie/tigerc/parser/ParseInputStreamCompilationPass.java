@@ -16,7 +16,7 @@ import java.io.InputStream;
  * Created by sean on 3/2/15.
  */
 class ParseInputStreamCompilationPass implements CompilationPass<InputStream, AstNode> {
-    private static final String PASS_NAME = "AST generation";
+    private static final String PASS_NAME = "ast generation";
 
     @Override
     public String getName() {

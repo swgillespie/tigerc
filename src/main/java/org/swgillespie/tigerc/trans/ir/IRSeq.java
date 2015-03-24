@@ -20,11 +20,16 @@ public final class IRSeq extends IRStatement {
         return second;
     }
 
+    public void setFirst(IRStatement first) {
+        this.first = first;
+    }
+
+    public void setSecond(IRStatement second) {
+        this.second = second;
+    }
+
     @Override
     public String toString() {
-        return "IRSeq{" +
-                "first=" + first +
-                ", second=" + second +
-                '}';
+        return "seq (" + first + ", " + second + ")";
     }
 }

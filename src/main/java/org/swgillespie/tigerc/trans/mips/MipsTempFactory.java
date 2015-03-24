@@ -5,7 +5,9 @@ import org.swgillespie.tigerc.trans.TempLabel;
 import org.swgillespie.tigerc.trans.TempRegister;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by sean on 3/8/15.
@@ -13,6 +15,52 @@ import java.util.List;
 public class MipsTempFactory implements TempFactory {
     private int labelCounter;
     private int registerCounter;
+    private Map<TempRegister, String> canonicalRegisterNames;
+
+    public MipsTempFactory() {
+        this.canonicalRegisterNames = this.initializeCanonicalRegisterNames();
+    }
+
+
+    private Map<TempRegister, String> initializeCanonicalRegisterNames() {
+        Map<TempRegister, String> map = new HashMap<>();
+        map.put(this.Zero, "$zero");
+        map.put(this.AT, "$at");
+        map.put(this.V0, "$v0");
+        map.put(this.V1, "$v1");
+        map.put(this.A0, "$a0");
+        map.put(this.A1, "$a1");
+        map.put(this.A2, "$a2");
+        map.put(this.A3, "$a3");
+        map.put(this.T0, "$t0");
+        map.put(this.T1, "$t1");
+        map.put(this.T2, "$t2");
+        map.put(this.T3, "$t3");
+        map.put(this.T4, "$t4");
+        map.put(this.T5, "$t5");
+        map.put(this.T6, "$t6");
+        map.put(this.T7, "$t7");
+        map.put(this.T8, "$t8");
+        map.put(this.T9, "$t9");
+        map.put(this.S0, "$s0");
+        map.put(this.S1, "$s1");
+        map.put(this.S2, "$s2");
+        map.put(this.S3, "$s3");
+        map.put(this.S4, "$s4");
+        map.put(this.S5, "$s5");
+        map.put(this.S6, "$s6");
+        map.put(this.S7, "$s7");
+        map.put(this.GP, "$gp");
+        map.put(this.SP, "$sp");
+        map.put(this.FP, "$fp");
+        map.put(this.RA, "$ra");
+        return map;
+    }
+
+    public String getCanonicalRegisterName(TempRegister temp) {
+        return this.canonicalRegisterNames.get(temp);
+    }
+
 
     @Override
     public TempRegister newTemp() {
@@ -173,6 +221,14 @@ public class MipsTempFactory implements TempFactory {
     }
 
     public List<TempRegister> calleeSaveRegisters() {
-        return Arrays.asList(S0, S1, S2, S3, S4, S5, S6, S7);
+        return Arrays.asList(S0, S1, S2, S3, S4, S5, S6, S7, RA);
+    }
+
+    public List<TempRegister> callerSaveRegisters() {
+        return Arrays.asList(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9);
+    }
+
+    public List<TempRegister> reservedRegisters() {
+        return Arrays.asList(Zero, AT, RA, SP, FP, V0, V1);
     }
 }

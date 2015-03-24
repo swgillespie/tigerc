@@ -20,8 +20,9 @@ public final class MipsStackFrame extends StackFrame {
         super(name, formalEscapes);
         this.tempFactory = tempFactory;
         this.currentOffset = 0;
-        this.formals = new ArrayList<>();
-        formalEscapes.forEach(this::allocLocal);
+        this.formals = formalEscapes.stream()
+                .map(t -> (MipsFrameAccess) this.allocLocal(t))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -38,7 +39,7 @@ public final class MipsStackFrame extends StackFrame {
         } else {
             access = MipsFrameAccess.inRegister(tempFactory.newTemp());
         }
-        formals.add(access);
+        //formals.add(access);
         return access;
     }
 
@@ -50,8 +51,8 @@ public final class MipsStackFrame extends StackFrame {
 
     @Override
     public TempRegister returnValue() {
-        // for Mips, the return value always lives in the $ra register.
-        return ((MipsTempFactory)tempFactory).RA;
+        // for Mips, the return value always lives in the $v0 register.
+        return ((MipsTempFactory)tempFactory).V0;
     }
 
     @Override
@@ -66,7 +67,12 @@ public final class MipsStackFrame extends StackFrame {
             FrameAccess access = this.allocLocal(false);
             savedRegisters.add(access);
             IRExpression saveExpr = access.toExpression(new IRTemp(mts.FP), tempFactory);
-            IRStatement move = new IRMoveMem(saveExpr, MipsConstants.wordSize, new IRTemp(calleeSavedReg));
+            IRStatement move;
+            if (saveExpr instanceof IRTemp) {
+                move = new IRMoveTemp((IRTemp)saveExpr, new IRTemp(calleeSavedReg));
+            } else {
+                move = new IRMoveMem(saveExpr, MipsConstants.wordSize, new IRTemp(calleeSavedReg));
+            }
             prolog = new IRSeq(move, prolog);
         }
 
@@ -78,7 +84,12 @@ public final class MipsStackFrame extends StackFrame {
         CompilerAssert.check(formals.size() <= 4, "can't pass more than 4 parameters yet");
         for (int i = 0; i < formals.size(); i++) {
             IRExpression loadExpr = formals.get(i).toExpression(new IRTemp(mts.FP), tempFactory);
-            IRStatement move = new IRMoveMem(loadExpr, MipsConstants.wordSize, new IRTemp(argumentRegisters.get(i)));
+            IRStatement move;
+            if (loadExpr instanceof IRTemp) {
+                move = new IRMoveTemp((IRTemp)loadExpr, new IRTemp(argumentRegisters.get(i)));
+            } else {
+                move = new IRMoveMem(loadExpr, MipsConstants.wordSize, new IRTemp(argumentRegisters.get(i)));
+            }
             prolog = new IRSeq(move, prolog);
         }
 
@@ -86,11 +97,17 @@ public final class MipsStackFrame extends StackFrame {
         for (int i = 0; i < calleeSavedRegisters.size(); i++) {
             FrameAccess savedReg = savedRegisters.get(i);
             IRExpression loadExpr = savedReg.toExpression(new IRTemp(mts.FP), tempFactory);
-            IRStatement move = new IRMoveTemp(new IRTemp(calleeSavedRegisters.get(i)),
-                    new IRMem(loadExpr, MipsConstants.wordSize));
+            IRStatement move = new IRMoveTemp(new IRTemp(calleeSavedRegisters.get(i)), loadExpr);
             prolog = new IRSeq(prolog, move);
         }
 
+        // I sort of disagree with Appel's approach of inserting the function prolog/epilog in trans.
+        // LLVM opts to do this after register allocation. Appel's approach is simple because it
+        // hints to the register allocator what sort of parameters should go in what registers and
+        // lots of these MOVs can get eliminated during register allocation. However, it also makes
+        // flow analysis and other IR passes a little strange since there are a ton of registers
+        // being saved. For now, I'm going to try and see if I can get away with inserting the prolog/epilog
+        // later in the pipeline.
         return prolog;
     }
 

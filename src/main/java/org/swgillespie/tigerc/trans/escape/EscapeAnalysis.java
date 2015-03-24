@@ -46,11 +46,13 @@ final class EscapeAnalysis extends BaseAstVisitor {
         for (int i = 0; i < parameters.size(); i++) {
             table.insert(paramNames.get(i), parameters.get(i));
         }
+        depth++;
     }
 
     @Override
     public void exit(FunctionDeclarationNode node) {
         table.exitScope();
+        depth--;
     }
 
     @Override

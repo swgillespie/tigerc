@@ -9,6 +9,7 @@ import org.swgillespie.tigerc.trans.ir.IRStatement;
 public class ProcFragment extends Fragment {
     private IRStatement body;
     private StackFrame frame;
+    private boolean isToplevel;
 
     public ProcFragment(IRStatement body, StackFrame frame) {
         this.body = body;
@@ -21,6 +22,22 @@ public class ProcFragment extends Fragment {
 
     public StackFrame getFrame() {
         return frame;
+    }
+
+    public void setBody(IRStatement body) {
+        this.body = body;
+    }
+
+    public void setFrame(StackFrame frame) {
+        this.frame = frame;
+    }
+
+    public boolean isToplevel() {
+        return isToplevel;
+    }
+
+    public void setToplevel(boolean isToplevel) {
+        this.isToplevel = isToplevel;
     }
 
     @Override

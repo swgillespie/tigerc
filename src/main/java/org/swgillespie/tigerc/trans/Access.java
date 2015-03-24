@@ -40,7 +40,7 @@ public final class Access {
         // to access the static link from the current level, we can use the frame pointer
         // of the current frame.
         IRExpression staticLinkExpression = new IRTemp(level.getFrame().framePointer());
-        while (otherLevel != level) {
+        while (cursor != level) {
             // for every level between us and the level that this var was defined, we have to
             // retrieve the static link and use it to find the static link for the /next/ frame.
             CompilerAssert.check(otherLevel.getFormals().size() > 0, "frame formals list was empty");

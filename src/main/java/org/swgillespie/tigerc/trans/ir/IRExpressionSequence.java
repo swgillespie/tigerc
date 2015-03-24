@@ -20,11 +20,16 @@ public final class IRExpressionSequence extends IRExpression {
         return result;
     }
 
+    public void setStmt(IRStatement stmt) {
+        this.stmt = stmt;
+    }
+
+    public void setResult(IRExpression result) {
+        this.result = result;
+    }
+
     @Override
     public String toString() {
-        return "IRExpressionSequence{" +
-                "stmt=" + stmt +
-                ", result=" + result +
-                '}';
+        return "(" + stmt + "; " + result + ")";
     }
 }

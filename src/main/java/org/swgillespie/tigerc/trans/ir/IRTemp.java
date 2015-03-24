@@ -18,8 +18,6 @@ public final class IRTemp extends IRExpression {
 
     @Override
     public String toString() {
-        return "IRTemp{" +
-                "temp=" + temp +
-                '}';
+        return temp.toString();
     }
 }

@@ -2,6 +2,9 @@ package org.swgillespie.tigerc.trans.ir;
 
 import org.swgillespie.tigerc.trans.TempLabel;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by sean on 3/8/15.
  */
@@ -40,14 +43,29 @@ public final class IRConditionalJump extends IRStatement {
         return falseTarget;
     }
 
+    public void setFirstExpr(IRExpression firstExpr) {
+        this.firstExpr = firstExpr;
+    }
+
+    public void setSecondExpr(IRExpression secondExpr) {
+        this.secondExpr = secondExpr;
+    }
+
+    public void setRelationalOp(IRRelationalOp relationalOp) {
+        this.relationalOp = relationalOp;
+    }
+
+    public void setTrueTarget(TempLabel trueTarget) {
+        this.trueTarget = trueTarget;
+    }
+
+    public void setFalseTarget(TempLabel falseTarget) {
+        this.falseTarget = falseTarget;
+    }
+
     @Override
     public String toString() {
-        return "IRConditionalJump{" +
-                "firstExpr=" + firstExpr +
-                ", secondExpr=" + secondExpr +
-                ", relationalOp=" + relationalOp +
-                ", trueTarget=" + trueTarget +
-                ", falseTarget=" + falseTarget +
-                '}';
+        return "if " + firstExpr + " " + relationalOp + " "
+                + secondExpr + " jump " + trueTarget + " else jump " + falseTarget;
     }
 }

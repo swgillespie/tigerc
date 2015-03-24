@@ -12,6 +12,6 @@ public class MipsTempLabel extends TempLabel {
 
     @Override
     public String toString() {
-        return "MipsTempLabel{name=" + name + "}";
+        return name;
     }
 }
