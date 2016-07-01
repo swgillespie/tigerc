@@ -58,11 +58,13 @@ This implementation is **not complete**. The following things have
 been completed in the initial commit, sans bugs:
 * Lexing, parsing, AST generation
 * Semantic analysis, type checking
-
-The following things are not yet complete:
 * Target-agnostic translation to IR
 * IR transformations, optimization passes
-* Target-specific instruction selection, register selection, code generation
+* Target-specific instruction selection
+
+The following things are not complete:
+* Liveness analysis
+* Register allocation
 
 The initial target platform will be MIPS32, as provided by [SPIM](http://spimsimulator.sourceforge.net/).
 `tigerc` will emit a .S file that contains unassembled MIPS32 code,
